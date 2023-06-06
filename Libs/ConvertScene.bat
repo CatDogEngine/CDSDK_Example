@@ -1,0 +1,1 @@
+GenericToORMToCD.exe ../Models/scene.gltf ../Models/scene_without_lights.cdbin
