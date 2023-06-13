@@ -5,6 +5,8 @@ void GLScene::LoadModel(const char *path) {
 	GLConsumer consumer("");
 
 	cdtools::Processor processor(&producer, &consumer, m_pScene);
+	// If texture file path is wrong, you can use this api to redirect texture path.
+	//processor.AddExtraTextureSearchFolder("D:/Textures");
 	processor.Run();
 
 	m_meshes = consumer.GetMeshes();
