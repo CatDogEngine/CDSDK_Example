@@ -21,8 +21,6 @@ uniform sampler2D s_texBaseColor;
 uniform sampler2D s_texNormal;
 uniform sampler2D s_texORM;
 uniform sampler2D s_texLUT;
-uniform samplerCube s_texCube;
-uniform samplerCube s_texCubeIrr;
 uniform vec3 u_cameraPos;
 
 // -------------------- PBR -------------------- //
@@ -213,17 +211,12 @@ void main()
 	
 	// ----------------------------------- Environment Light ----------------------------------------
 	
-	// Environment Prefiltered Irradiance
-	vec3 envIrradiance = toLinear(texture(s_texCubeIrr, material.normal).xyz);
-	
 	// Environment Specular BRDF
 	vec2 lut = texture(s_texLUT, vec2(NdotV, 1.0 - material.roughness)).xy;
 	vec3 envSpecularBRDF = (material.F0 * lut.x + lut.y);
 	
 	// Environment Specular Radiance
 	vec3 reflectDir = normalize(reflect(-viewDir, material.normal));
-	float mip = clamp(6.0 * material.roughness, 0.1, 6.0);
-	vec3 envRadiance = toLinear(textureLod(s_texCube, reflectDir, mip).xyz);
 	
 	// Occlusion
 	float specularOcclusion = mix(pow(material.occlusion, 4.0), 1.0, clamp(-0.3 + NdotV * NdotV, 0.0, 1.0));
@@ -233,8 +226,8 @@ void main()
 	vec3 Fre = FresnelSchlick(NdotV, material.F0);
 	vec3 KD = mix(1.0 - Fre, vec3(0.0), material.metallic);
 	
-	vec3 envColor = KD * material.albedo * envIrradiance * material.occlusion +
-		envSpecularBRDF * envRadiance * min(specularOcclusion, horizonOcclusion);
+	vec3 envColor = KD * material.albedo * material.occlusion +
+		envSpecularBRDF * min(specularOcclusion, horizonOcclusion);
 	
 	// ------------------------------------ Fragment Color -----------------------------------------
 	

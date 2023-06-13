@@ -121,6 +121,12 @@ void GLConsumer::Execute(const cd::SceneDatabase *pSceneDatabase) {
 			textures.insert(textures.end(), typeTextures.begin(), typeTextures.end());
 		}
 
+		GLTexture texture;
+		texture.m_id = TextureFromFile("env_brdf_lut.png", "Models/textures");
+		texture.m_type = cd::MaterialTextureType::Count;
+		texture.m_path = "";
+		textures.emplace_back(std::move(texture));
+
 		m_meshes.emplace_back(GLMesh(vertices, indices, textures));
 	}
 
@@ -145,7 +151,7 @@ void GLConsumer::Execute(const cd::SceneDatabase *pSceneDatabase) {
 
 std::vector<GLTexture> GLConsumer::LoadMaterialTextures(const cd::SceneDatabase* pSceneDatabase, const cd::Material& material, const cd::MaterialTextureType textureType) {
 	std::vector<GLTexture> textures;
-
+	
 	const std::optional<cd::TextureID>& textureID = material.GetTextureID(textureType);
 	if (textureID.has_value()) {
 		const std::string& texturePath = pSceneDatabase->GetTexture(textureID->Data()).GetPath();

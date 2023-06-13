@@ -28,6 +28,9 @@ void GLMesh::Draw(const Shader &shader) const {
         else if (type == cd::MaterialTextureType::Metallic) {
             shader.SetInt("s_texORM", i);
         }
+        else if (type == cd::MaterialTextureType::Count) {
+            shader.SetInt("s_texLUT", i);
+        }
 
         glBindTexture(GL_TEXTURE_2D, m_textures[i].m_id);
     }
