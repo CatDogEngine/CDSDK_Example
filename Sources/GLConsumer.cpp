@@ -3,6 +3,8 @@
 
 #include "GLConsumer.h"
 
+#include <filesystem>
+
 constexpr cd::MaterialTextureType PossibleTextureTypes[] = {
 	cd::MaterialTextureType::BaseColor,
 	cd::MaterialTextureType::Normal,
@@ -147,7 +149,8 @@ std::vector<GLTexture> GLConsumer::LoadMaterialTextures(const cd::SceneDatabase*
 	const std::optional<cd::TextureID>& textureID = material.GetTextureID(textureType);
 	if (textureID.has_value()) {
 		const std::string& texturePath = pSceneDatabase->GetTexture(textureID->Data()).GetPath();
-		std::string textureName = texturePath.substr(texturePath.rfind('/') + 1, texturePath.rfind('.') - texturePath.rfind('/') - 1);
+		std::filesystem::path textureNamePath(texturePath);
+		std::string textureName = textureNamePath.filename().string();
 		printf("\t\t\t\tTexture Name: %s\n", textureName.c_str());
 
 		const auto it = m_textureLoaded.find(textureName);
@@ -172,7 +175,7 @@ std::vector<GLTexture> GLConsumer::LoadMaterialTextures(const cd::SceneDatabase*
 
 unsigned int GLConsumer::TextureFromFile(const char* path, const std::string& directory) {
 	std::string filename(path);
-	filename = directory + '/' + filename + ".png";
+	filename = directory + '/' + filename;
 	printf("\t\t\t\t[Read File] Texture Path: %s\n", filename.c_str());
 
 	unsigned int textureID;
