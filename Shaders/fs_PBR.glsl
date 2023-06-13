@@ -190,6 +190,43 @@ vec3 CalculateLights(Material material, vec3 worldPos, vec3 viewDir, vec3 diffus
 	return color;
 }
 
+vec3 ACES(vec3 color) {
+	mat3 ACESInputMat  = mat3(vec3(0.59719,  0.35458,  0.04823), vec3( 0.07600, 0.90834,  0.01566), vec3( 0.02840,  0.13383, 0.83777));
+	mat3 ACESOutputMat = mat3(vec3(1.60475, -0.53108, -0.07367), vec3(-0.10208, 1.10813, -0.00605), vec3(-0.00327, -0.07276, 1.07602));
+	
+	color      = ACESInputMat * color;
+	vec3 nom   = color * (color + 0.0245786) - 0.000090537;
+	vec3 denom = color * (0.983729 * color + 0.4329510) + 0.238081;
+	color      = nom / denom;
+	color      = ACESOutputMat * color;
+	
+	return color;
+}
+
+// Exposure
+float ComputeEV100(float aperture ,float shutterTime ,float ISO) {
+	// EV number is defined as:
+	// 2^ EV_s = N^2 / t and EV_s = EV_100 + log2 (S /100)
+	// This gives
+	// EV_s = log2 (N^2 / t)
+	// EV_100 + log2 (S /100) = log2 (N^2 / t)
+	// EV_100 = log2 (N^2 / t) - log2 (S /100)
+	// EV_100 = log2 (N^2 / t . 100 / S)
+	
+	return log2(aperture * aperture / shutterTime * 100.0 / ISO);
+}
+
+float ConvertEV100ToExposure(float EV100) {
+	// Compute the maximum luminance possible with H_sbs sensitivity
+	// maxLum = 78 / ( S * q ) * N^2 / t
+	// = 78 / ( S * q ) * 2^ EV_100
+	// = 78 / (100 * 0.65) * 2^ EV_100
+	// = 1.2 * 2^ EV
+	// Reference : http :// en. wikipedia . org / wiki / Film_speed
+	
+	return 1.0 / (1.2 * exp2(EV100));
+}
+
 void main()
 {
 	Material material = CreateMaterial();
@@ -231,5 +268,16 @@ void main()
 	
 	// ------------------------------------ Fragment Color -----------------------------------------
 	
-	fragColor = vec4(dirColor + envColor, 1.0);
+	vec3 finalColor = dirColor + envColor;
+	
+	// Exposure
+	finalColor *= ConvertEV100ToExposure(0.0);
+	
+	// Tone Mapping
+	finalColor = ACES(finalColor);
+	
+	// Gamma Correction
+	finalColor = pow(finalColor, vec3(0.45, 0.45, 0.45));
+	
+	fragColor = vec4(finalColor, 1.0);
 }
